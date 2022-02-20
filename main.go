@@ -2,12 +2,17 @@ package main
 
 import (
 	"NFTracker/config"
-	"log"
-
+	"NFTracker/datastorage"
+	"NFTracker/handlers"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"log"
 )
 
 func main() {
+	// Initialize cache
+	_ = datastorage.InitCache()
+	log.Printf("Cache init")
+
 	bot, err := tgbotapi.NewBotAPI(config.BotToken)
 	if err != nil {
 		log.Panic(err)
@@ -27,17 +32,35 @@ func main() {
 			continue
 		}
 
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+		chatID := update.Message.Chat.ID
+		username := update.Message.From.UserName
+		t := update.Message.Text
+		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chatID, username, t, update.Message.IsCommand())
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		//msg.ReplyToMessageID = update.Message.MessageID
 		bot.Send(msg)
 
-		//if len(update.Message.Text) == 0 {
-		//	if update.Message.LeftChatMember != nil || update.Message.NewChatMembers != nil {
-		//		bot.DeleteMessage(tgbotapi.DeleteMessageConfig{ChatID: update.Message.Chat.ID, MessageID: update.Message.MessageID})
-		//	}
-		//}
+		switch {
+		case update.Message.IsCommand():
+			// Handle commands
+			//
+			// TODO: Check that the bot is set up for `alert` command
+			// and add it if not.
+			// Currently hardcoded in setup process, but outline function
+			// has been added. Need to change it to take existing commands,
+			// and add the new one (rather than overwrite)
+
+			switch update.Message.Command() {
+			case "check":
+				handlers.PriceCheck(bot, chatID, update.Message.CommandArguments())
+			case "alert":
+				handlers.Alert(bot, chatID, update.Message.CommandArguments())
+			case "start", "help":
+				handlers.Introduction(bot, chatID)
+			default:
+				bot.Send(tgbotapi.NewMessage(chatID, "🤔 Command not recognised."))
+			}
+		}
 	}
-	log.Printf("[%s]", "HEREE")
 }
