@@ -1,6 +1,7 @@
 package api
 
 import (
+	"NFTracker/pkg/db"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -34,6 +35,10 @@ func getHomeByID(w http.ResponseWriter, r *http.Request) {
 	homeID := chi.URLParam(r, "homeID")
 
 	w.Write([]byte(fmt.Sprintf("get home: %s", homeID)))
+}
+
+type GetHomesResponse struct {
+	Homes []db.Home `json:"homes"`
 }
 
 func getHomes(w http.ResponseWriter, r *http.Request) {
