@@ -4,11 +4,23 @@ import (
 	"NFTracker/config"
 	"NFTracker/datastorage"
 	"NFTracker/handlers"
+	"NFTracker/pkg/api"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"net/http"
+	"os"
 )
 
 func main() {
+	// Init API and DB
+	router := api.NewAPI()
+	port := os.Getenv("PORT")
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), router)
+	if err != nil {
+		log.Printf("error from  router: %v\n", err)
+	}
+
 	// Initialize cache
 	_ = datastorage.InitCache()
 	log.Printf("Cache init")
