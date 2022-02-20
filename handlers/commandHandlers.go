@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"NFTracker/datastorage"
-	"NFTracker/scraping"
+	"NFTracker/os"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/patrickmn/go-cache"
@@ -45,10 +45,11 @@ func PriceCheck(bot *tgbotapi.BotAPI, chatID int64, argument string) {
 	}
 
 	// Else query web and update cache
-	fp, err := scraping.Scrape("https://opensea.io/collection/doodles-official")
-	if err != nil {
-		log.Printf("@@@@ %v", fp)
-	}
+	os.Scrape("doodles-official")
+	fp := "1111"
+	//if err != nil {
+	//	log.Printf("@@@@ %v", fp)
+	//}
 
 	// Set the value of the key "argument" to fp, with the default expiration time
 	datastorage.GlobalCache.Set(argument, fp, cache.DefaultExpiration)

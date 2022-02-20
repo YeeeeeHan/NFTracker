@@ -1,3 +1,3 @@
 package db
 
-type
+type db struct{}
