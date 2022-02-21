@@ -1,25 +1,21 @@
 package main
 
 import (
-	"NFTracker/config"
+	"NFTracker/cmd/config"
+	"NFTracker/cmd/handlers"
 	"NFTracker/datastorage"
-	"NFTracker/handlers"
-	"NFTracker/pkg/api"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
-	"net/http"
-	"os"
 )
 
 func main() {
-	// Init API and DB
-	router := api.NewAPI()
-	port := os.Getenv("PORT")
-	err := http.ListenAndServe(fmt.Sprintf(":%s", port), router)
-	if err != nil {
-		log.Printf("error from  router: %v\n", err)
-	}
+	//// Init API and DB
+	//router := api.NewAPI()
+	//port := os.Getenv("PORT")
+	//err := http.ListenAndServe(fmt.Sprintf(":%s", port), router)
+	//if err != nil {
+	//	log.Printf("error from  router: %v\n", err)
+	//}
 
 	// Initialize cache
 	_ = datastorage.InitCache()
@@ -49,9 +45,10 @@ func main() {
 		t := update.Message.Text
 		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chatID, username, t, update.Message.IsCommand())
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		// Replying to a message
+		//msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		//msg.ReplyToMessageID = update.Message.MessageID
-		bot.Send(msg)
+		// bot.Send(msg)
 
 		switch {
 		case update.Message.IsCommand():
