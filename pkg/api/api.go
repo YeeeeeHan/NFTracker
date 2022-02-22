@@ -2,9 +2,11 @@ package api
 
 import (
 	"NFTracker/pkg/db"
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"log"
 	"net/http"
 )
 
@@ -27,7 +29,42 @@ func NewAPI() *chi.Mux {
 	return r
 }
 
+type CreateHomeRequest struct {
+	Price       int64  `json:"price"`
+	Description string `json:"description"`
+	Address     string `json:"address"`
+	AgentID     int64  `pg:"rel:has-one" json:"agent"`
+}
+
+type CreateHomeResponse struct {
+	Success bool     `json:"success"`
+	Error   string   `json:"error"`
+	Home    *db.Home `json:"home"`
+}
+
 func createHomes(w http.ResponseWriter, r *http.Request) {
+	// parse in the request body
+	req := &CreateHomeRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		res := &CreateHomeResponse{
+			Success: false,
+			Error:   err.Error(),
+			Home:    nil,
+		}
+		err = json.NewEncoder(w).Encode(res)
+		if err != nil {
+			log.Printf("error sending resopnse: %v\n", err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// get the db somehow
+
+	// insert our home
+
+	// return a response
 	w.Write([]byte("create home"))
 }
 

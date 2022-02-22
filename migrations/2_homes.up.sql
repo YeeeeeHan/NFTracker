@@ -1,6 +1,7 @@
-CREATE TABLE IF NOT EXISTS app_user (
-    username varchar(45) NOT NULL,
-    password varchar(450) NOT NULL,
-    enabled integer NOT NULL DEFAULT '1',
-    PRIMARY KEY (username)
-    )
+CREATE TABLE IF NOT EXISTS homes (
+    id SERIAL PRIMARY KEY,
+    price BIGINT NOT NULL,
+    description VARCHAR NOT NULL,
+    address VARCHAR NOT NULL,
+    agent_id BIGINT
+);
