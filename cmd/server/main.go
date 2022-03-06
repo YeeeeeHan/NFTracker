@@ -15,19 +15,21 @@ import (
 
 func main() {
 	// Init API and DB
-	_, err := db.NewDB()
+	db, err := db.NewDB()
 	if err != nil {
 		panic(err)
 	}
 
-	router := api.NewAPI()
-
 	log.Printf("We're up and running!")
 	port := os.Getenv("PORT")
-	err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
-	if err != nil {
-		log.Printf("error from  router: %v\n", err)
-	}
+
+	go func() {
+		router := api.NewAPI(db)
+		err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
+		if err != nil {
+			log.Printf("error from  router: %v\n", err)
+		}
+	}()
 
 	// Initialize cache
 	_ = datastorage.InitCache()

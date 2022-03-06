@@ -5,20 +5,36 @@ import (
 	"github.com/go-pg/migrations/v8"
 	"github.com/go-pg/pg/v10"
 	"log"
+	"os"
 )
 
 func NewDB() (*pg.DB, error) {
+	var opts *pg.Options
+	var err error
+
+	if os.Getenv("ENV") == "PROD" {
+		log.Printf("@@@@@ run migrations")
+		opts, err = pg.ParseURL(os.Getenv("DATABASE_URL"))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		opts = &pg.Options{
+			Addr:     "db:5432",
+			User:     "postgres",
+			Password: "admin",
+		}
+	}
+
 	// connect to db
-	db := pg.Connect(&pg.Options{
-		Addr:     "db:5432",
-		User:     "postgres",
-		Password: "admin",
-	})
+	db := pg.Connect(opts)
 
 	// run migrations
 	log.Printf("@@@@@ run migrations")
 	collection := migrations.NewCollection()
-	err := collection.DiscoverSQLMigrations("migrations")
+	err = collection.DiscoverSQLMigrations("migrations")
+
+	log.Printf("@@@@@ collections: %v", collection)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +47,8 @@ func NewDB() (*pg.DB, error) {
 	}
 
 	log.Printf("@@@@@ up")
-	oldVersion, newVersion, err := migrations.Run(db, "up")
+	oldVersion, newVersion, err := collection.Run(db, "up")
+	log.Printf("@@@@@ oldVersion %v, newVersion %v", oldVersion, newVersion)
 	if err != nil {
 		return nil, err
 	}

@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS homes (
     price BIGINT NOT NULL,
     description VARCHAR NOT NULL,
     address VARCHAR NOT NULL,
-    agent_id BIGINT
+    agent_id BIGINT REFERENCES agents(id)
 );
