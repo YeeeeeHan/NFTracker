@@ -3,10 +3,11 @@ package opensea
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type OSResponse struct {
@@ -105,7 +106,8 @@ type OSResponse struct {
 }
 
 func (osr OSResponse) GetSupplyString() string {
-	return fmt.Sprintf("%.2f", osr.Collection.Stats.TotalSupply)
+	p := message.NewPrinter(language.English)
+	return p.Sprintf("%d", int(osr.Collection.Stats.TotalSupply))
 }
 
 func (osr OSResponse) GetFloorPriceString() string {
@@ -113,7 +115,8 @@ func (osr OSResponse) GetFloorPriceString() string {
 }
 
 func (osr OSResponse) GetNumOwnersString() string {
-	return strconv.Itoa(osr.Collection.Stats.NumOwners)
+	p := message.NewPrinter(language.English)
+	return p.Sprintf("%d", osr.Collection.Stats.NumOwners)
 }
 
 func (osr OSResponse) GetOneDayChangeString() string {
@@ -121,7 +124,8 @@ func (osr OSResponse) GetOneDayChangeString() string {
 }
 
 func (osr OSResponse) GetOneDayVolumeString() string {
-	return fmt.Sprintf("%.2f", osr.Collection.Stats.OneDayVolume)
+	p := message.NewPrinter(language.English)
+	return p.Sprintf("%d", int(osr.Collection.Stats.OneDayVolume))
 }
 
 func (osr OSResponse) GetSevenDayChangeString() string {
@@ -129,11 +133,13 @@ func (osr OSResponse) GetSevenDayChangeString() string {
 }
 
 func (osr OSResponse) GetSevenDayVolumeString() string {
-	return fmt.Sprintf("%.2f", osr.Collection.Stats.SevenDayVolume)
+	p := message.NewPrinter(language.English)
+	return p.Sprintf("%d", int(osr.Collection.Stats.SevenDayVolume))
 }
 
 func (osr OSResponse) GetTotalVolumeString() string {
-	return fmt.Sprintf("%.2f", osr.Collection.Stats.TotalVolume)
+	p := message.NewPrinter(language.English)
+	return p.Sprintf("%d", int(osr.Collection.Stats.TotalVolume))
 }
 
 func Scrape(slug string) (*OSResponse, error) {
