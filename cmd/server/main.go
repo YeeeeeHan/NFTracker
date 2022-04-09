@@ -1,46 +1,53 @@
 package main
 
 import (
-	"NFTracker/cmd/config"
 	"NFTracker/cmd/handlers"
 	"NFTracker/datastorage"
-	"NFTracker/pkg/api"
 	"NFTracker/pkg/db"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/joho/godotenv"
 	"log"
-	"net/http"
 	"os"
 )
 
 func main() {
+	// If env is not prod, use read env from local.env
+	if os.Getenv("ENV") != "PROD" {
+		log.Printf("[env] Reading from local.env")
+		err := godotenv.Load("local.env")
+		if err != nil {
+			log.Fatalf("Some error occured. Err: %s", err)
+		}
+	}
+
 	// Init API and DB
 	db, err := db.NewDB()
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("We're up and running!")
-	port := os.Getenv("PORT")
+	log.Printf("[main] We're up and running!")
+	//port := os.Getenv("PORT")
 
-	go func() {
-		router := api.NewAPI(db)
-		err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
-		if err != nil {
-			log.Printf("error from  router: %v\n", err)
-		}
-	}()
+	//go func() {
+	//	router := api.NewAPI(db)
+	//	err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
+	//	if err != nil {
+	//		log.Printf("error from  router: %v\n", err)
+	//	}
+	//}()
 
 	// Initialize cache
 	_ = datastorage.InitCache()
 	log.Printf("Cache init")
 
-	bot, err := tgbotapi.NewBotAPI(config.BotToken)
-	if err != nil {
-		log.Panic(err)
+	var bot *tgbotapi.BotAPI
+	var boterr error
+	bot, boterr = tgbotapi.NewBotAPI(os.Getenv("BOTTOKEN"))
+	if boterr != nil {
+		log.Panic(boterr)
 	}
-
-	bot.Debug = true
+	bot.Debug = false
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -76,9 +83,9 @@ func main() {
 
 			switch update.Message.Command() {
 			case "check":
-				handlers.PriceCheck(bot, chatID, update.Message.CommandArguments())
+				handlers.PriceCheck(db, bot, chatID, update.Message.CommandArguments())
 			case "alert":
-				handlers.Alert(bot, chatID, update.Message.CommandArguments())
+				handlers.Alert(db, bot, chatID, update.Message.CommandArguments())
 			case "start", "help":
 				handlers.Introduction(bot, chatID)
 			default:

@@ -4,6 +4,7 @@ import (
 	"NFTracker/datastorage"
 	"NFTracker/pkg/os"
 	"fmt"
+	"github.com/go-pg/pg/v10"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/patrickmn/go-cache"
 	"log"
@@ -23,7 +24,7 @@ func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
 	return
 }
 
-func PriceCheck(bot *tgbotapi.BotAPI, chatID int64, slug string) {
+func PriceCheck(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, slug string) {
 	if slug == "" {
 		msg := tgbotapi.NewMessage(chatID, "Never put anything???")
 		if _, e := bot.Send(msg); e != nil {
@@ -62,14 +63,14 @@ func PriceCheck(bot *tgbotapi.BotAPI, chatID int64, slug string) {
 	return
 }
 
-func Alert(bot *tgbotapi.BotAPI, chatID int64, arguments string) {
+func Alert(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, arguments string) {
 	if th, e := strconv.Atoi(arguments); e == nil {
 		// Use a Go Routine to invoke the population
 		// of the alert channel and handling the returned
 		// alerts
 		go func() {
 			ac := make(chan string)
-			//go alertSpaces(ac, th)
+			go alertSpaces(ac, th)
 			msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("👍 Successfully created alert to be sent whenever more than %v spaces are available", th))
 			if _, e := bot.Send(msg); e != nil {
 				log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)

@@ -13,7 +13,6 @@ func NewDB() (*pg.DB, error) {
 	var err error
 
 	if os.Getenv("ENV") == "PROD" {
-		log.Printf("@@@@@ run migrations")
 		opts, err = pg.ParseURL(os.Getenv("DATABASE_URL"))
 		if err != nil {
 			return nil, err
