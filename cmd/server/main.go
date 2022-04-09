@@ -3,10 +3,13 @@ package main
 import (
 	"NFTracker/cmd/handlers"
 	"NFTracker/datastorage"
+	"NFTracker/pkg/api"
 	"NFTracker/pkg/db"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/joho/godotenv"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -27,15 +30,15 @@ func main() {
 	}
 
 	log.Printf("[main] We're up and running!")
-	//port := os.Getenv("PORT")
+	port := os.Getenv("PORT")
 
-	//go func() {
-	//	router := api.NewAPI(db)
-	//	err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
-	//	if err != nil {
-	//		log.Printf("error from  router: %v\n", err)
-	//	}
-	//}()
+	go func() {
+		router := api.NewAPI(db)
+		err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
+		if err != nil {
+			log.Printf("error from  router: %v\n", err)
+		}
+	}()
 
 	// Initialize cache
 	_ = datastorage.InitCache()
