@@ -1,10 +1,12 @@
-package os
+package opensea
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type OSResponse struct {
@@ -102,6 +104,38 @@ type OSResponse struct {
 	} `json:"collection"`
 }
 
+func (osr OSResponse) GetSupplyString() string {
+	return fmt.Sprintf("%.2f", osr.Collection.Stats.TotalSupply)
+}
+
+func (osr OSResponse) GetFloorPriceString() string {
+	return fmt.Sprintf("%.2f", osr.Collection.Stats.FloorPrice)
+}
+
+func (osr OSResponse) GetNumOwnersString() string {
+	return strconv.Itoa(osr.Collection.Stats.NumOwners)
+}
+
+func (osr OSResponse) GetOneDayChangeString() string {
+	return fmt.Sprintf("%.3f", osr.Collection.Stats.OneDayChange)
+}
+
+func (osr OSResponse) GetOneDayVolumeString() string {
+	return fmt.Sprintf("%.2f", osr.Collection.Stats.OneDayVolume)
+}
+
+func (osr OSResponse) GetSevenDayChangeString() string {
+	return fmt.Sprintf("%.3f", osr.Collection.Stats.SevenDayChange)
+}
+
+func (osr OSResponse) GetSevenDayVolumeString() string {
+	return fmt.Sprintf("%.2f", osr.Collection.Stats.SevenDayVolume)
+}
+
+func (osr OSResponse) GetTotalVolumeString() string {
+	return fmt.Sprintf("%.2f", osr.Collection.Stats.TotalVolume)
+}
+
 func Scrape(slug string) (*OSResponse, error) {
 
 	url := "https://api.opensea.io/collection/" + slug
@@ -120,4 +154,8 @@ func Scrape(slug string) (*OSResponse, error) {
 	}
 
 	return &osResponse, nil
+}
+
+func CreateUrlFromSlug(slug string) string {
+	return "https://opensea.io/collection/" + slug
 }

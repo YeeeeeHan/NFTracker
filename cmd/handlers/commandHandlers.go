@@ -1,8 +1,9 @@
 package handlers
 
 import (
+	"NFTracker/cmd"
 	"NFTracker/datastorage"
-	"NFTracker/pkg/os"
+	"NFTracker/pkg/opensea"
 	"fmt"
 	"github.com/go-pg/pg/v10"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -12,12 +13,9 @@ import (
 )
 
 func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Welcome to the 🚗 *Car Park Telegram Bot* 🚗\n_Powered by "+
-		"Apache Kafka® and [ksqlDB](https://ksqldb.io)_ 😃\n\n👉 Use `/alert \\<x\\>` to receive an alert "+
-		"when a car park has more than \\<x\\> places available\n👉 Send me the name of a car park to find "+
-		"out how many spaces are currently available in it\n👉 Send me your location to find out the nearest "+
-		"car park to you with more than 10 spaces\\.")
-	msg.ParseMode = "MarkdownV2"
+	msg := tgbotapi.NewMessage(chatID, cmd.WelcomeMessage)
+	msg.ParseMode = "Markdown"
+	msg.DisableWebPagePreview = true
 	if _, e := bot.Send(msg); e != nil {
 		log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
 	}
@@ -46,17 +44,26 @@ func PriceCheck(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, slug string) {
 	}
 
 	// Else query web and update cache
-	osResponse, err := os.Scrape(slug)
+	osResponse, err := opensea.Scrape(slug)
 	if err != nil {
-		log.Printf("[os.Scrape] %v", err)
+		log.Printf("[opensea.Scrape] %v", err)
+		msg := tgbotapi.NewMessage(chatID, "TEST")
+		if _, e := bot.Send(msg); e != nil {
+			log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
+		}
 		return
 	}
 
-	// Set the value of the key "slug" to fp, with the default expiration time
-	fp := fmt.Sprintf("%.2f", osResponse.Collection.Stats.FloorPrice)
-	datastorage.GlobalCache.Set(slug, fp, cache.DefaultExpiration)
+	// Update cache - Set the value of the key "slug" to fp,
+	// with the default expiration time
+	datastorage.GlobalCache.Set(slug, osResponse.GetFloorPriceString(), cache.DefaultExpiration)
 
-	msg := tgbotapi.NewMessage(chatID, fp)
+	msg := tgbotapi.NewMessage(
+		chatID,
+		cmd.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse),
+	)
+	msg.ParseMode = "Markdown"
+	msg.DisableWebPagePreview = true
 	if _, e := bot.Send(msg); e != nil {
 		log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
 	}
@@ -70,7 +77,7 @@ func Alert(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, arguments string) {
 		// alerts
 		go func() {
 			ac := make(chan string)
-			go alertSpaces(ac, th)
+			//go alertSpaces(ac, th)
 			msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("👍 Successfully created alert to be sent whenever more than %v spaces are available", th))
 			if _, e := bot.Send(msg); e != nil {
 				log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
