@@ -24,7 +24,7 @@ func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
 
 func PriceCheck(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, slug string) {
 	if slug == "" {
-		msg := tgbotapi.NewMessage(chatID, "Never put anything???")
+		msg := tgbotapi.NewMessage(chatID, "No slug detected.")
 		if _, e := bot.Send(msg); e != nil {
 			log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
 		}
