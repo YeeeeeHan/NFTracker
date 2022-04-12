@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS users (
-    id  SERIAL PRIMARY KEY,
-    username VARCHAR NOT NULL
+    username VARCHAR PRIMARY KEY
 );
 
-INSERT INTO users
-VALUES (1, '@yeeeeehan');
+INSERT INTO users (username)
+VALUES ('yeeeeehan');

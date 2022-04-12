@@ -65,6 +65,7 @@ func main() {
 		}
 
 		chatID := update.Message.Chat.ID
+		userID := update.Message.From.UserName
 		username := update.Message.From.UserName
 		t := update.Message.Text
 		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chatID, username, t, update.Message.IsCommand())
@@ -86,7 +87,7 @@ func main() {
 
 			switch update.Message.Command() {
 			case "check":
-				handlers.PriceCheck(db, bot, chatID, update.Message.CommandArguments())
+				handlers.PriceCheck(db, bot, chatID, userID, update.Message.CommandArguments())
 			case "alert":
 				handlers.Alert(db, bot, chatID, update.Message.CommandArguments())
 			case "start", "help":

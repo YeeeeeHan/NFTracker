@@ -1,7 +1,7 @@
 package datastorage
 
 import (
-	cache "github.com/patrickmn/go-cache"
+	"github.com/patrickmn/go-cache"
 	"time"
 )
 

@@ -3,6 +3,7 @@ package api
 import (
 	"NFTracker/pkg/db"
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-pg/pg/v10"
@@ -31,20 +32,20 @@ func NewAPI(pgdb *pg.DB) *chi.Mux {
 }
 
 type CreateUserRequest struct {
-	ID       int64 `json:"id"`
-	Username int64 `json:"username"`
+	ID       int64  `pg:",pk" json:"id"`
+	Username string `json:"username"`
 }
 
 type UserResponse struct {
-	Success bool     `json:"success"`
-	Error   string   `json:"error"`
-	User    *db.User `json:"user"`
+	Success bool      `json:"success"`
+	Error   string    `json:"error"`
+	User    *db.Users `json:"user"`
 }
 
 type CreateuserResponse struct {
-	Success bool     `json:"success"`
-	Error   string   `json:"error"`
-	User    *db.User `json:"user"`
+	Success bool      `json:"success"`
+	Error   string    `json:"error"`
+	User    *db.Users `json:"user"`
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -82,9 +83,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// insert our user
-	user, err := db.CreateUser(pgdb, &db.User{
-		Username: req.ID,
-	})
+	user, err := db.CreateCustomer(pgdb, req.Username)
 	if err != nil {
 		res := &UserResponse{
 			Success: false,
@@ -128,7 +127,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// query for the user
-	user, err := db.GetUser(pgdb, userID)
+	user, err := db.GetCustomer(pgdb, userID)
 	if err != nil {
 		res := &UserResponse{
 			Success: false,
@@ -154,9 +153,9 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 type usersResponse struct {
-	Success bool       `json:"success"`
-	Error   string     `json:"error"`
-	user    []*db.User `json:"user"`
+	Success bool        `json:"success"`
+	Error   string      `json:"error"`
+	user    []*db.Users `json:"user"`
 }
 
 func getusers(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +175,7 @@ func getusers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := db.GetUsers(pgdb)
+	users, err := db.GetCustomers(pgdb)
 	if err != nil {
 		res := &usersResponse{
 			Success: false,
@@ -259,9 +258,10 @@ func updateuserById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update user
-	user, err := db.UpdateUser(pgdb, &db.User{
-		ID: intuserID,
+	user, err := db.UpdateCustomer(pgdb, &db.Users{
+		Username: "123",
 	})
+	fmt.Println(intuserID)
 	if err != nil {
 		res := &UserResponse{
 			Success: false,
@@ -320,7 +320,7 @@ func deleteuserById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete user
-	err = db.DeleteUser(pgdb, intuserID)
+	err = db.DeleteCustomer(pgdb, intuserID)
 	if err != nil {
 		res := &UserResponse{
 			Success: false,

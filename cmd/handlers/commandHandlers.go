@@ -3,6 +3,7 @@ package handlers
 import (
 	"NFTracker/cmd"
 	"NFTracker/datastorage"
+	"NFTracker/pkg/db"
 	"NFTracker/pkg/opensea"
 	"fmt"
 	"github.com/go-pg/pg/v10"
@@ -22,7 +23,7 @@ func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
 	return
 }
 
-func PriceCheck(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, slug string) {
+func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug string) {
 	if slug == "" {
 		msg := tgbotapi.NewMessage(chatID, "No slug detected.")
 		if _, e := bot.Send(msg); e != nil {
@@ -31,12 +32,23 @@ func PriceCheck(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, slug string) {
 		return
 	}
 
-	// Check Cache
-	price, found := datastorage.GlobalCache.Get(slug)
+	defer func() {
+		_, err := db.GetCustomer(pgdb, userName)
+		if err == pg.ErrNoRows {
+			log.Printf("[db.GetCustomer] New user... adding user to DB...")
+			_, _ = db.CreateCustomer(pgdb, userName)
+		}
+	}()
 
-	// If found return from cache
-	if found {
-		msg := tgbotapi.NewMessage(chatID, price.(string))
+	// Check Cache, if found return from cache
+	if x, found := datastorage.GlobalCache.Get(slug); found {
+		osResponse := x.(*opensea.OSResponse)
+		msg := tgbotapi.NewMessage(
+			chatID,
+			cmd.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse),
+		)
+		msg.ParseMode = "Markdown"
+		msg.DisableWebPagePreview = true
 		if _, e := bot.Send(msg); e != nil {
 			log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
 		}
@@ -56,7 +68,7 @@ func PriceCheck(db *pg.DB, bot *tgbotapi.BotAPI, chatID int64, slug string) {
 
 	// Update cache - Set the value of the key "slug" to fp,
 	// with the default expiration time
-	datastorage.GlobalCache.Set(slug, osResponse.GetFloorPriceString(), cache.DefaultExpiration)
+	datastorage.GlobalCache.Set(slug, osResponse, cache.DefaultExpiration)
 
 	msg := tgbotapi.NewMessage(
 		chatID,

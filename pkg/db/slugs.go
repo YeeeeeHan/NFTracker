@@ -20,7 +20,7 @@ func CreateSlug(db *pg.DB, req *Slug) (*Slug, error) {
 
 	slug := &Slug{}
 	err = db.Model(slug).
-		Relation("User").
+		Relation("Users").
 		Where("slug.id = ?", req.ID).
 		Select()
 
@@ -30,7 +30,7 @@ func CreateSlug(db *pg.DB, req *Slug) (*Slug, error) {
 func GetSlug(db *pg.DB, homeID string) (*Slug, error) {
 	slug := &Slug{}
 	err := db.Model(slug).
-		Relation("User").
+		Relation("Users").
 		Where("slug.id = ?", homeID).
 		Select()
 
@@ -40,7 +40,7 @@ func GetSlug(db *pg.DB, homeID string) (*Slug, error) {
 func GetSlugs(db *pg.DB) ([]*Slug, error) {
 	slugs := make([]*Slug, 0)
 	err := db.Model(&slugs).
-		Relation("User").
+		Relation("Users").
 		Select()
 
 	return slugs, err
@@ -54,7 +54,7 @@ func UpdateSlug(db *pg.DB, s *Slug) (*Slug, error) {
 
 	slug := &Slug{}
 	err = db.Model(slug).
-		Relation("User").
+		Relation("Users").
 		Where("slug.id = ?", s.ID).
 		Select()
 
@@ -67,7 +67,7 @@ func DeleteSlug(db *pg.DB, slugID int64) error {
 	}
 
 	err := db.Model(slug).
-		Relation("User").
+		Relation("Users").
 		Where("slug.id = ?", slug.ID).
 		Select()
 	if err != nil {

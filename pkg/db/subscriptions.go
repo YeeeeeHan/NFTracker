@@ -20,7 +20,7 @@ func CreateSubscriptions(db *pg.DB, req *Subscription) (*Subscription, error) {
 
 	subscription := &Subscription{}
 	err = db.Model(subscription).
-		Relation("User").
+		Relation("Users").
 		Where("subscription.id = ?", req.ID).
 		Select()
 
@@ -30,7 +30,7 @@ func CreateSubscriptions(db *pg.DB, req *Subscription) (*Subscription, error) {
 func GetSubscription(db *pg.DB, subID string) (*Subscription, error) {
 	subscription := &Subscription{}
 	err := db.Model(subscription).
-		Relation("User").
+		Relation("Users").
 		Where("subscription.id = ?", subID).
 		Select()
 
@@ -40,7 +40,7 @@ func GetSubscription(db *pg.DB, subID string) (*Subscription, error) {
 func GetSubscriptions(db *pg.DB) ([]*Subscription, error) {
 	subscriptions := make([]*Subscription, 0)
 	err := db.Model(&subscriptions).
-		Relation("User").
+		Relation("Users").
 		Select()
 
 	return subscriptions, err
@@ -54,7 +54,7 @@ func UpdateSubscription(db *pg.DB, s *Subscription) (*Subscription, error) {
 
 	subscription := &Subscription{}
 	err = db.Model(subscription).
-		Relation("User").
+		Relation("Users").
 		Where("subscription.id = ?", s.ID).
 		Select()
 
@@ -67,7 +67,7 @@ func DeleteSubcription(db *pg.DB, slugID int64) error {
 	}
 
 	err := db.Model(subscription).
-		Relation("User").
+		Relation("Users").
 		Where("subscription.id = ?", subscription.ID).
 		Select()
 	if err != nil {
