@@ -38,13 +38,13 @@ type CreateUserRequest struct {
 
 type UserResponse struct {
 	Success bool      `json:"success"`
-	Error   string    `json:"error"`
+	Error   string    `json:"err"`
 	User    *db.Users `json:"user"`
 }
 
 type CreateuserResponse struct {
 	Success bool      `json:"success"`
-	Error   string    `json:"error"`
+	Error   string    `json:"err"`
 	User    *db.Users `json:"user"`
 }
 
@@ -60,7 +60,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -76,7 +76,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -92,7 +92,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending response: %v\n", err)
+			log.Printf("err sending response: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -121,7 +121,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 		}
 		err := json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -136,7 +136,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending response: %v\n", err)
+			log.Printf("err sending response: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -154,7 +154,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 
 type usersResponse struct {
 	Success bool        `json:"success"`
-	Error   string      `json:"error"`
+	Error   string      `json:"err"`
 	user    []*db.Users `json:"user"`
 }
 
@@ -169,7 +169,7 @@ func getusers(w http.ResponseWriter, r *http.Request) {
 		}
 		err := json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -184,7 +184,7 @@ func getusers(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending response: %v\n", err)
+			log.Printf("err sending response: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -218,7 +218,7 @@ func updateuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -235,7 +235,7 @@ func updateuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -251,7 +251,7 @@ func updateuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -270,7 +270,7 @@ func updateuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending response: %v\n", err)
+			log.Printf("err sending response: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -297,7 +297,7 @@ func deleteuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -313,7 +313,7 @@ func deleteuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending resopnse: %v\n", err)
+			log.Printf("err sending resopnse: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -329,7 +329,7 @@ func deleteuserById(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			log.Printf("error sending response: %v\n", err)
+			log.Printf("err sending response: %v\n", err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		return

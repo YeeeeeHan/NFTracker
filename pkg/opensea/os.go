@@ -1,6 +1,7 @@
 package opensea
 
 import (
+	"NFTracker/pkg/custerror"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/text/language"
@@ -142,13 +143,17 @@ func (osr OSResponse) GetTotalVolumeString() string {
 	return p.Sprintf("%d", int(osr.Collection.Stats.TotalVolume))
 }
 
-func Scrape(slug string) (*OSResponse, error) {
+func QueryAPI(slug string) (*OSResponse, error) {
 
 	url := "https://api.opensea.io/collection/" + slug
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	res, _ := http.DefaultClient.Do(req)
+	if res.StatusCode != http.StatusOK {
+		log.Printf("[http.DefaultClient.Do] Non-OK HTTP status:", res.StatusCode)
+		return nil, custerror.InvalidSlugErr
+	}
 	defer res.Body.Close()
 
 	body, _ := ioutil.ReadAll(res.Body)

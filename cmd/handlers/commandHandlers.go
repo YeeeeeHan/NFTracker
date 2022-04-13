@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"NFTracker/cmd"
+	"NFTracker/cmd/msg"
 	"NFTracker/datastorage"
+	"NFTracker/pkg/custerror"
 	"NFTracker/pkg/db"
 	"NFTracker/pkg/opensea"
 	"fmt"
@@ -11,10 +12,11 @@ import (
 	"github.com/patrickmn/go-cache"
 	"log"
 	"strconv"
+	"strings"
 )
 
 func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, cmd.WelcomeMessage)
+	msg := tgbotapi.NewMessage(chatID, msg.WelcomeMessage)
 	msg.ParseMode = "Markdown"
 	msg.DisableWebPagePreview = true
 	if _, e := bot.Send(msg); e != nil {
@@ -32,6 +34,15 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 		return
 	}
 
+	matches := opensea.FindClosestmatch(slug, 3)
+	// Slug not found in top collections
+	if slug != matches[0] {
+		// Send clarification message
+		message := "Collection not found, did you mean any of these:\n\n"
+		msg.SendInlineSlugMissMessage(bot, chatID, message, matches)
+		return
+	}
+
 	defer func() {
 		_, err := db.GetCustomer(pgdb, userName)
 		if err == pg.ErrNoRows {
@@ -42,27 +53,31 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 
 	// Check Cache, if found return from cache
 	if x, found := datastorage.GlobalCache.Get(slug); found {
+		// assert type
 		osResponse := x.(*opensea.OSResponse)
-		msg := tgbotapi.NewMessage(
-			chatID,
-			cmd.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse),
-		)
-		msg.ParseMode = "Markdown"
-		msg.DisableWebPagePreview = true
-		if _, e := bot.Send(msg); e != nil {
-			log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
-		}
+
+		// Send price check message
+		message := msg.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse)
+		msg.SendMessage(bot, chatID, message)
 		return
 	}
 
-	// Else query web and update cache
-	osResponse, err := opensea.Scrape(slug)
+	// Else query web
+	osResponse, err := opensea.QueryAPI(slug)
+
+	// Slug not found
+	if err == custerror.InvalidSlugErr {
+		matches := opensea.FindClosestmatch(slug, 3)
+		// Send clarification message
+		message := "Collection not found, did you mean any of these:\n\n" + strings.Join(matches, ", ")
+		msg.SendMessage(bot, chatID, message)
+		return
+	}
+
 	if err != nil {
-		log.Printf("[opensea.Scrape] %v", err)
-		msg := tgbotapi.NewMessage(chatID, "TEST")
-		if _, e := bot.Send(msg); e != nil {
-			log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
-		}
+		message := "Sorry there is an internal error, please try again!"
+		msg.SendMessage(bot, chatID, message)
+		log.Printf("[opensea.QueryAPI] %v", err)
 		return
 	}
 
@@ -70,15 +85,10 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 	// with the default expiration time
 	datastorage.GlobalCache.Set(slug, osResponse, cache.DefaultExpiration)
 
-	msg := tgbotapi.NewMessage(
-		chatID,
-		cmd.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse),
-	)
-	msg.ParseMode = "Markdown"
-	msg.DisableWebPagePreview = true
-	if _, e := bot.Send(msg); e != nil {
-		log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
-	}
+	// Send price check message
+	message := msg.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse)
+	msg.SendMessage(bot, chatID, message)
+
 	return
 }
 

@@ -19,7 +19,7 @@ func main() {
 		log.Printf("[env] Reading from local.env")
 		err := godotenv.Load("local.env")
 		if err != nil {
-			log.Fatalf("Some error occured. Err: %s", err)
+			log.Fatalf("Some err occured. Err: %s", err)
 		}
 	}
 
@@ -36,7 +36,7 @@ func main() {
 		router := api.NewAPI(db)
 		err = http.ListenAndServe(fmt.Sprintf(":%s", port), router)
 		if err != nil {
-			log.Printf("error from  router: %v\n", err)
+			log.Printf("err from  router: %v\n", err)
 		}
 	}()
 
@@ -60,12 +60,28 @@ func main() {
 	updates, err := bot.GetUpdatesChan(u)
 
 	for update := range updates {
+		if update.CallbackQuery != nil {
+			chatID := update.CallbackQuery.Message.Chat.ID
+			username := update.CallbackQuery.Message.From.UserName
+			callbackData := update.CallbackQuery.Data
+			log.Printf("\n\nReceived message in (chatID: %d) from %s: (callbackData: %v) \n\n", chatID, username, callbackData)
+
+			// Respond to the callback query, telling Telegram to show the user
+			// a message with the data received.
+			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, callbackData)
+			if _, err := bot.AnswerCallbackQuery(callback); err != nil {
+				continue
+			}
+
+			// And finally, send a message containing the data received.
+			handlers.PriceCheck(db, bot, chatID, username, callbackData)
+		}
+
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
 		}
 
 		chatID := update.Message.Chat.ID
-		userID := update.Message.From.UserName
 		username := update.Message.From.UserName
 		t := update.Message.Text
 		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chatID, username, t, update.Message.IsCommand())
@@ -87,7 +103,7 @@ func main() {
 
 			switch update.Message.Command() {
 			case "check":
-				handlers.PriceCheck(db, bot, chatID, userID, update.Message.CommandArguments())
+				handlers.PriceCheck(db, bot, chatID, username, update.Message.CommandArguments())
 			case "alert":
 				handlers.Alert(db, bot, chatID, update.Message.CommandArguments())
 			case "start", "help":
