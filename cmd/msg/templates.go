@@ -10,7 +10,7 @@ var WelcomeMessage = "Welcome to the 🌊 *OpenSea NFTracker Bot* 🌊\n\n" +
 	"👉 More features coming soon..." +
 	"\n\nBot creator: [Yee Han](https://github.com/YeeeeeHan)"
 
-func PriceCheckMessage(slug string, link string, osr *opensea.OSResponse) string {
+func PriceCheckMessage(collectionName string, link string, osr *opensea.OSResponse) string {
 	return fmt.Sprintf("[%s](%s)\n"+
 		"✨ Floor price:               %sΞ\n\n"+
 		"📉 1-Day FP change:     %sΞ\n"+
@@ -20,7 +20,7 @@ func PriceCheckMessage(slug string, link string, osr *opensea.OSResponse) string
 		"💎 Volume traded:        %sΞ\n"+
 		"💯 Supply:                       %s\n"+
 		"✋🏼 Owners:                      %s",
-		slug,
+		collectionName,
 		link,
 		osr.GetFloorPriceString(),
 		osr.GetOneDayChangeString(),

@@ -37,9 +37,10 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 	matches := opensea.FindClosestmatch(slug, 3)
 	// Slug not found in top collections
 	if slug != matches[0] {
+		log.Printf(slug, matches)
 		// Send clarification message
 		message := "Collection not found, did you mean any of these:\n\n"
-		msg.SendInlineSlugMissMessage(bot, chatID, message, matches)
+		msg.SendInlineSlugMissMessage(bot, chatID, message, matches...)
 		return
 	}
 
@@ -57,7 +58,7 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 		osResponse := x.(*opensea.OSResponse)
 
 		// Send price check message
-		message := msg.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse)
+		message := msg.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slug), osResponse)
 		msg.SendMessage(bot, chatID, message)
 		return
 	}
@@ -86,7 +87,7 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 	datastorage.GlobalCache.Set(slug, osResponse, cache.DefaultExpiration)
 
 	// Send price check message
-	message := msg.PriceCheckMessage(slug, opensea.CreateUrlFromSlug(slug), osResponse)
+	message := msg.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slug), osResponse)
 	msg.SendMessage(bot, chatID, message)
 
 	return

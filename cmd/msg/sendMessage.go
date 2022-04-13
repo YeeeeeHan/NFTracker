@@ -18,18 +18,16 @@ func SendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
 	}
 }
 
-func SendInlineSlugMissMessage(bot *tgbotapi.BotAPI, chatID int64, message string, matches []string) {
-	var inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(matches[0], fmt.Sprintf(matches[0])),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(matches[1], fmt.Sprintf(matches[1])),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(matches[2], fmt.Sprintf(matches[2])),
-		),
-	)
+func SendInlineSlugMissMessage(bot *tgbotapi.BotAPI, chatID int64, message string, matches ...string) {
+	var buttons [][]tgbotapi.InlineKeyboardButton
+
+	for _, match := range matches {
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(match, fmt.Sprintf(match)),
+		))
+	}
+
+	var inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(buttons...)
 
 	msg := tgbotapi.NewMessage(chatID, message)
 	msg.ReplyMarkup = inlineKeyboard
