@@ -94,18 +94,9 @@ func main() {
 		switch {
 		case update.Message.IsCommand():
 			// Handle commands
-			//
-			// TODO: Check that the bot is set up for `alert` command
-			// and add it if not.
-			// Currently hardcoded in setup process, but outline function
-			// has been added. Need to change it to take existing commands,
-			// and add the new one (rather than overwrite)
-
 			switch update.Message.Command() {
 			case "check":
-				handlers.PriceCheck(db, bot, chatID, username, update.Message.CommandArguments())
-			case "alert":
-				handlers.Alert(db, bot, chatID, update.Message.CommandArguments())
+				handlers.PriceCheckWithSlugMatch(db, bot, chatID, username, update.Message.CommandArguments())
 			case "start", "help":
 				handlers.Introduction(bot, chatID)
 			default:

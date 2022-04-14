@@ -18,7 +18,7 @@ func SendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
 	}
 }
 
-func SendInlineSlugMissMessage(bot *tgbotapi.BotAPI, chatID int64, message string, matches ...string) {
+func SendInlineSlugMissMessage(bot *tgbotapi.BotAPI, chatID int64, message, slugQuery string, matches ...string) {
 	var buttons [][]tgbotapi.InlineKeyboardButton
 
 	for _, match := range matches {
@@ -26,6 +26,10 @@ func SendInlineSlugMissMessage(bot *tgbotapi.BotAPI, chatID int64, message strin
 			tgbotapi.NewInlineKeyboardButtonData(match, fmt.Sprintf(match)),
 		))
 	}
+
+	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("\"Nope, continue with %s\"", slugQuery), slugQuery),
+	))
 
 	var inlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(buttons...)
 

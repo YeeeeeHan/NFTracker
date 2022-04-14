@@ -3,7 +3,6 @@ package handlers
 import (
 	"NFTracker/cmd/msg"
 	"NFTracker/datastorage"
-	"NFTracker/pkg/custerror"
 	"NFTracker/pkg/db"
 	"NFTracker/pkg/opensea"
 	"fmt"
@@ -12,8 +11,9 @@ import (
 	"github.com/patrickmn/go-cache"
 	"log"
 	"strconv"
-	"strings"
 )
+
+const POPULAR_COLLECTION_NUM_OWNERS = 400
 
 func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, msg.WelcomeMessage)
@@ -25,25 +25,40 @@ func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
 	return
 }
 
-func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug string) {
-	if slug == "" {
-		msg := tgbotapi.NewMessage(chatID, "No slug detected.")
+func PriceCheckWithSlugMatch(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slugQuery string) {
+	if slugQuery == "" {
+		msg := tgbotapi.NewMessage(chatID, "No slugQuery detected.")
 		if _, e := bot.Send(msg); e != nil {
 			log.Printf("Error sending message to telegram.\nMessage: %v\nError: %v", msg, e)
 		}
 		return
 	}
 
-	matches := opensea.FindClosestmatch(slug, 3)
-	// Slug not found in top collections
-	if slug != matches[0] {
-		log.Printf(slug, matches)
+	var namelist []string
+	sluglist, err := db.GetAllSlugs(pgdb)
+	if err != nil {
+		log.Printf("@@@@@@@@@@@ err %v", err)
+		return
+	}
+	for _, slug := range sluglist {
+		namelist = append(namelist, slug.SlugName)
+	}
+	log.Printf("@@@@@@@@@@@@ namelist: %v", namelist)
+
+	matches := opensea.FindClosestmatch(slugQuery, 1, namelist)
+	// Slugs not found in top collections
+	if matches[0] != "" && slugQuery != matches[0] {
+		log.Printf(slugQuery, matches)
 		// Send clarification message
-		message := "Collection not found, did you mean any of these:\n\n"
-		msg.SendInlineSlugMissMessage(bot, chatID, message, matches...)
+		message := "Slug not found! Did you mean:\n\n"
+		msg.SendInlineSlugMissMessage(bot, chatID, message, slugQuery, matches...)
 		return
 	}
 
+	PriceCheck(pgdb, bot, chatID, userName, slugQuery)
+}
+
+func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slugQuery string) {
 	defer func() {
 		_, err := db.GetCustomer(pgdb, userName)
 		if err == pg.ErrNoRows {
@@ -53,41 +68,62 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slug 
 	}()
 
 	// Check Cache, if found return from cache
-	if x, found := datastorage.GlobalCache.Get(slug); found {
+	if x, found := datastorage.GlobalCache.Get(slugQuery); found {
 		// assert type
 		osResponse := x.(*opensea.OSResponse)
 
 		// Send price check message
-		message := msg.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slug), osResponse)
+		message := msg.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slugQuery), osResponse)
 		msg.SendMessage(bot, chatID, message)
 		return
 	}
 
 	// Else query web
-	osResponse, err := opensea.QueryAPI(slug)
+	osResponse, err := opensea.QueryAPI(slugQuery)
 
-	// Slug not found
-	if err == custerror.InvalidSlugErr {
-		matches := opensea.FindClosestmatch(slug, 3)
-		// Send clarification message
-		message := "Collection not found, did you mean any of these:\n\n" + strings.Join(matches, ", ")
-		msg.SendMessage(bot, chatID, message)
-		return
-	}
+	// Slugs not found
+	//if err == custerror.InvalidSlugErr {
+	//	matches := opensea.FindClosestmatch(slugQuery, 3)
+	//	// Send clarification message
+	//	message := "Collection not found, did you mean any of these:\n\n" + strings.Join(matches, ", ")
+	//	msg.SendMessage(bot, chatID, message)
+	//	return
+	//}
 
 	if err != nil {
-		message := "Sorry there is an internal error, please try again!"
+		message := "Collection does not exist LOL!"
 		msg.SendMessage(bot, chatID, message)
 		log.Printf("[opensea.QueryAPI] %v", err)
 		return
 	}
 
-	// Update cache - Set the value of the key "slug" to fp,
-	// with the default expiration time
-	datastorage.GlobalCache.Set(slug, osResponse, cache.DefaultExpiration)
+	// Update cache - Set the value of the key "slugQuery" to fp with the default expiration time
+	datastorage.GlobalCache.Set(slugQuery, osResponse, cache.DefaultExpiration)
+
+	// Update DB if collection is not already in database and is popular
+	retSlug, err := db.GetSlug(pgdb, slugQuery)
+	if err == pg.ErrNoRows && osResponse.Collection.Stats.NumOwners > POPULAR_COLLECTION_NUM_OWNERS {
+		log.Printf(fmt.Sprintf("[db.GetSlug] New popular slug... adding slug to DB... %s"), slugQuery)
+		_, _ = db.CreateSlug(pgdb, &db.Slugs{
+			SlugName:   slugQuery,
+			FloorPrice: osResponse.Collection.Stats.FloorPrice,
+		})
+	}
+
+	// If collection metadata is outdated
+	if retSlug.FloorPrice != osResponse.Collection.Stats.FloorPrice {
+		updatedSlug, err := db.UpdateSlug(pgdb, &db.Slugs{
+			SlugName:   osResponse.Collection.Slug,
+			FloorPrice: osResponse.Collection.Stats.FloorPrice,
+		})
+		if err != nil {
+			log.Printf(fmt.Sprintf("[db.UpdateSlug] Err: %s", err))
+		}
+		log.Printf(fmt.Sprintf("[db.UpdateSlug] Successfully updated slug: %s", updatedSlug))
+	}
 
 	// Send price check message
-	message := msg.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slug), osResponse)
+	message := msg.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slugQuery), osResponse)
 	msg.SendMessage(bot, chatID, message)
 
 	return
