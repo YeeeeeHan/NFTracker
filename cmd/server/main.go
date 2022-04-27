@@ -99,8 +99,6 @@ func main() {
 				handlers.PriceCheckWithSlugMatch(db, bot, chatID, username, update.Message.CommandArguments())
 			case "start", "help":
 				handlers.Introduction(bot, chatID)
-			default:
-				bot.Send(tgbotapi.NewMessage(chatID, "🤔 Command not recognised."))
 			}
 		}
 	}
