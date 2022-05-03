@@ -5,7 +5,7 @@ import (
 )
 
 type Chats struct {
-	Id          string `pg:",pk" json:"id"`
+	Id          int64  `pg:",pk" json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Invitelink  string `json:"invitelink"`
@@ -25,7 +25,7 @@ func CreateChat(db *pg.DB, req *Chats) (*Chats, error) {
 	return chat, err
 }
 
-func GetChat(db *pg.DB, id string) (*Chats, error) {
+func GetChat(db *pg.DB, id int64) (*Chats, error) {
 	chat := &Chats{}
 	err := db.Model(chat).
 		Where("chats.id = ?", id).

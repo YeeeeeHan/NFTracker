@@ -9,7 +9,6 @@ import (
 	"github.com/go-pg/pg/v10"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
-	"strconv"
 )
 
 const PopularCollectionNumOwners = 400
@@ -35,11 +34,11 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, userName
 		}
 
 		// Collecting chat details
-		_, err = db.GetChat(pgdb, strconv.FormatInt(chat.ID, 10))
+		_, err = db.GetChat(pgdb, chat.ID)
 		if err == pg.ErrNoRows {
 			log.Printf("[db.GetChat] New chat... adding chat to DB...")
 			_, _ = db.CreateChat(pgdb, &db.Chats{
-				Id:          strconv.FormatInt(chat.ID, 10),
+				Id:          chat.ID,
 				Title:       chat.Title,
 				Description: chat.Description,
 				Invitelink:  chat.InviteLink,
