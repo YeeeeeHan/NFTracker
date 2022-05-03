@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"NFTracker/cmd/message"
+	"NFTracker/pkg/custError"
 	"NFTracker/pkg/db"
 	"NFTracker/pkg/opensea"
 	"fmt"
 	"github.com/go-pg/pg/v10"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"strconv"
 )
 
 const PopularCollectionNumOwners = 400
@@ -22,66 +24,72 @@ func Introduction(bot *tgbotapi.BotAPI, chatID int64) {
 	return
 }
 
-func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slugQuery string) {
-	// empty slugQuery
+func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, userName, slugQuery string) {
+	// Collect customer usernames and chat details
+	defer func() {
+		// Collecting customer usernames
+		_, err := db.GetCustomer(pgdb, userName)
+		if err == pg.ErrNoRows {
+			log.Printf("[db.GetCustomer] New user... adding user to DB...")
+			_, _ = db.CreateCustomer(pgdb, userName)
+		}
+
+		// Collecting chat details
+		_, err = db.GetChat(pgdb, strconv.FormatInt(chat.ID, 10))
+		if err == pg.ErrNoRows {
+			log.Printf("[db.GetChat] New chat... adding chat to DB...")
+			_, _ = db.CreateChat(pgdb, &db.Chats{
+				Id:          strconv.FormatInt(chat.ID, 10),
+				Title:       chat.Title,
+				Description: chat.Description,
+				Invitelink:  chat.InviteLink,
+			})
+		}
+
+	}()
+
+	// If empty slugQuery, send "No slugQuery detected"
 	if slugQuery == "" {
 		msg := "No slugQuery detected."
-		message.SendMessage(bot, chatID, msg)
+		message.SendMessage(bot, chat.ID, msg)
 		return
 	}
 
-	//// Check Cache, if found return from cache
-	//if x, found := datastorage.GlobalCache.Get(slugQuery); found {
-	//	// assert type
-	//	osResponse := x.(*opensea.OSResponse)
-	//
-	//	// Send price check message
-	//	message := message.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slugQuery), osResponse)
-	//	message.SendMessage(bot, chatID, message)
-	//	return
-	//}
-
-	// Else query web
+	// else query web to get osResponse
 	osResponse, err := opensea.QueryAPI(slugQuery)
-	if err != nil {
-		// Find the closest match from list of popular NFTs from database
+
+	// If slug is invalid
+	if err == custError.InvalidSlugErr {
+		// Find the closest match from list of popular collections from DB
 		match, err := closestMatchHelper(pgdb, slugQuery)
 		if err != nil {
 			log.Printf(fmt.Sprintf("[closestMatchHelper] Err: %s", err))
 			return
 		}
 
-		// Send notification of 404 but suggest the closest match
+		// Send notification of 404 and suggest the closest match
 		msg := fmt.Sprintf("⚠️ \"%s\" does not exist, please double-check `<slug>`", slugQuery)
-		message.SendInlineSlugMissMessage(bot, chatID, msg, slugQuery, match)
-
+		message.SendInlineSlugMissMessage(bot, chat.ID, msg, slugQuery, match)
 		return
 	}
+	if err != nil {
+		// Send notification of 404 but suggest the closest match
+		msg := fmt.Sprintf("⚠️  Internal error, please give us some time to solve it.")
+		message.SendMessage(bot, chat.ID, msg)
+	}
 
-	defer func() {
-		// Collecting customer usernames
-		_, err = db.GetCustomer(pgdb, userName)
-		if err == pg.ErrNoRows {
-			log.Printf("[db.GetCustomer] New user... adding user to DB...")
-			_, _ = db.CreateCustomer(pgdb, userName)
-		}
-	}()
-
-	//// Update cache - Set the value of the key "slugQuery" to fp with the default expiration time
-	//datastorage.GlobalCache.Set(slugQuery, osResponse, cache.DefaultExpiration)
-
-	// If collection is popular, trust user's query and return osresponse
+	// If collection is popular (> certain number of owners), return osResponse
 	if osResponse.Collection.Stats.NumOwners > PopularCollectionNumOwners {
 		// Send price check message
 		msg := message.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateOpenseaUrlFromSlug(slugQuery), osResponse)
-		message.SendMessage(bot, chatID, msg)
+		message.SendMessage(bot, chat.ID, msg)
 
 		// Update DB with popular collection
 		popularCollectionHelper(pgdb, osResponse, slugQuery)
 
 		return
 
-		// If collection is not popular, return query but suggest the closest match
+		// If collection is not popular, return osResponse AND suggest the closest match
 	} else {
 		// Return query
 		msg := message.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateOpenseaUrlFromSlug(slugQuery), osResponse)
@@ -93,16 +101,17 @@ func PriceCheck(pgdb *pg.DB, bot *tgbotapi.BotAPI, chatID int64, userName, slugQ
 			return
 		}
 
-		message.SendInlineSlugMissMessage(bot, chatID, msg, slugQuery, match)
+		message.SendInlineSlugMissMessage(bot, chat.ID, msg, slugQuery, match)
 		return
 	}
 }
 
-func EditMessage(pgdb *pg.DB, bot *tgbotapi.BotAPI, messageID int, chatID int64, slugQuery string) {
+// EditMessage updates the message(ID: messageID) when user clicks on the match suggestion
+func EditMessage(bot *tgbotapi.BotAPI, messageID int, chatID int64, slugQuery string) {
 	// Query web
 	osResponse, err := opensea.QueryAPI(slugQuery)
 	if err != nil {
-		msg := "Collection does not exist!"
+		msg := "⚠️  Collection does not exist!"
 		message.SendMessage(bot, chatID, msg)
 		log.Printf("[opensea.QueryAPI] %v", err)
 		return

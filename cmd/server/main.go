@@ -4,6 +4,7 @@ import (
 	"NFTracker/cmd/handlers"
 	"NFTracker/datastorage"
 	"NFTracker/pkg/api"
+	"NFTracker/pkg/constants"
 	"NFTracker/pkg/db"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -77,26 +78,26 @@ func main() {
 			}
 
 			// And finally, send a message containing the data received.
-			handlers.EditMessage(db, bot, messageID, chatID, callbackData)
+			handlers.EditMessage(bot, messageID, chatID, callbackData)
 		}
 
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
 		}
 
-		chatID := update.Message.Chat.ID
+		chat := update.Message.Chat
 		username := update.Message.From.UserName
 		t := update.Message.Text
-		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chatID, username, t, update.Message.IsCommand())
+		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chat.ID, username, t, update.Message.IsCommand())
 
 		switch {
 		case update.Message.IsCommand():
 			// Handle commands
 			switch update.Message.Command() {
-			case "check":
-				handlers.PriceCheck(db, bot, chatID, username, update.Message.CommandArguments())
-			case "start", "help":
-				handlers.Introduction(bot, chatID)
+			case constants.Fp:
+				handlers.PriceCheck(db, bot, chat, username, update.Message.CommandArguments())
+			case constants.Start, constants.Help:
+				handlers.Introduction(bot, chat.ID)
 			}
 		}
 	}

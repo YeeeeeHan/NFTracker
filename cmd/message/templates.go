@@ -3,15 +3,13 @@ package message
 import (
 	"NFTracker/pkg/opensea"
 	"fmt"
-	"log"
 )
 
-var WelcomeMessage = "Welcome to the   🌊   *OpenSea NFTracker Bot*   🌊\n\n" +
-	"👉 Use `/check <slug>` to receive the latest stats of a collection _(slug is the collection name in the url, e.g. doodles-official in https://opensea.io/collection/doodles-official)_\n\n" +
+var WelcomeMessage = "Welcome to the   *OpenSea NFTracker Bot* \n\n" +
+	"👉 Use `/fp <slug>` to receive the latest stats of a collection _(slug is the collection name in the url, e.g. doodles-official in https://opensea.io/collection/doodles-official)_\n\n" +
 	"👉 More features coming soon..."
 
 func PriceCheckMessage(collectionName string, link string, osr *opensea.OSResponse) string {
-	log.Println("@@@@@@@@@@@@@@@@", osr.Collection.TwitterUsername == nil)
 	return fmt.Sprintf("[%s](%s)\n"+
 		"✨ Floor price:               %sΞ\n\n"+
 		"📦 1-Day volume:          %sΞ\n"+

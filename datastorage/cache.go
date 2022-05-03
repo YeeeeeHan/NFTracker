@@ -14,3 +14,17 @@ func InitCache() *cache.Cache {
 
 	return GlobalCache
 }
+
+//// Check Cache, if found return from cache
+//if x, found := datastorage.GlobalCache.Get(slugQuery); found {
+//	// assert type
+//	osResponse := x.(*opensea.OSResponse)
+//
+//	// Send price check message
+//	message := message.PriceCheckMessage(osResponse.Collection.Name, opensea.CreateUrlFromSlug(slugQuery), osResponse)
+//	message.SendMessage(bot, chatID, message)
+//	return
+//}
+
+//// Update cache - Set the value of the key "slugQuery" to fp with the default expiration time
+//datastorage.GlobalCache.Set(slugQuery, osResponse, cache.DefaultExpiration)
