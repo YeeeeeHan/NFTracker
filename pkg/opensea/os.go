@@ -1,7 +1,7 @@
 package opensea
 
 import (
-	"NFTracker/pkg/custerror"
+	"NFTracker/pkg/custError"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/text/language"
@@ -151,8 +151,8 @@ func QueryAPI(slug string) (*OSResponse, error) {
 	req.Header.Add("Accept", "application/json")
 	res, _ := http.DefaultClient.Do(req)
 	if res.StatusCode != http.StatusOK {
-		log.Printf("[http.DefaultClient.Do] Non-OK HTTP status:", res.StatusCode)
-		return nil, custerror.InvalidSlugErr
+		log.Printf("[http.DefaultClient.Do] Non-OK HTTP status: %d", res.StatusCode)
+		return nil, custError.InvalidSlugErr
 	}
 	defer res.Body.Close()
 
@@ -167,6 +167,10 @@ func QueryAPI(slug string) (*OSResponse, error) {
 	return &osResponse, nil
 }
 
-func CreateUrlFromSlug(slug string) string {
+func CreateOpenseaUrlFromSlug(slug string) string {
 	return "https://opensea.io/collection/" + slug
+}
+
+func CreateTwitterUrlFromSlug(slug string) string {
+	return "https://twitter.com/" + slug
 }

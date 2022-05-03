@@ -61,9 +61,12 @@ func main() {
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
+			//s, _ := json.MarshalIndent(update, "", "\t")
+			//log.Printf("[update.CallbackQuery] update: %s", string(s))
 			chatID := update.CallbackQuery.Message.Chat.ID
 			username := update.CallbackQuery.Message.From.UserName
 			callbackData := update.CallbackQuery.Data
+			messageID := update.CallbackQuery.Message.MessageID
 			log.Printf("\n\nReceived message in (chatID: %d) from %s: (callbackData: %v) \n\n", chatID, username, callbackData)
 
 			// Respond to the callback query, telling Telegram to show the user
@@ -74,7 +77,7 @@ func main() {
 			}
 
 			// And finally, send a message containing the data received.
-			handlers.PriceCheck(db, bot, chatID, username, callbackData)
+			handlers.EditMessage(db, bot, messageID, chatID, callbackData)
 		}
 
 		if update.Message == nil { // ignore any non-Message Updates
@@ -86,17 +89,12 @@ func main() {
 		t := update.Message.Text
 		log.Printf("\n\nReceived message in (chatID: %d) from %s: %s (command: %v) \n\n", chatID, username, t, update.Message.IsCommand())
 
-		// Replying to a message
-		//msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		//msg.ReplyToMessageID = update.Message.MessageID
-		// bot.Send(msg)
-
 		switch {
 		case update.Message.IsCommand():
 			// Handle commands
 			switch update.Message.Command() {
 			case "check":
-				handlers.PriceCheckWithSlugMatch(db, bot, chatID, username, update.Message.CommandArguments())
+				handlers.PriceCheck(db, bot, chatID, username, update.Message.CommandArguments())
 			case "start", "help":
 				handlers.Introduction(bot, chatID)
 			}
