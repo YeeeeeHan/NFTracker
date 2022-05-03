@@ -143,6 +143,18 @@ func (osr OSResponse) GetTotalVolumeString() string {
 	return p.Sprintf("%d", int(osr.Collection.Stats.TotalVolume))
 }
 
+func (osr OSResponse) GetTwitterUsername() string {
+	return fmt.Sprintf("%v", osr.Collection.TwitterUsername)
+}
+
+func (osr OSResponse) GetDiscordURL() string {
+	return osr.Collection.DiscordURL
+}
+
+func (osr OSResponse) GetContractAddess() string {
+	return osr.Collection.PrimaryAssetContracts[0].Address
+}
+
 func QueryAPI(slug string) (*OSResponse, error) {
 
 	url := "https://api.opensea.io/collection/" + slug
@@ -171,6 +183,10 @@ func CreateOpenseaUrlFromSlug(slug string) string {
 	return "https://opensea.io/collection/" + slug
 }
 
-func CreateTwitterUrlFromSlug(slug string) string {
-	return "https://twitter.com/" + slug
+func CreateTwitterUrlFromUsername(username string) string {
+	return "https://twitter.com/" + username
+}
+
+func CreateLooksrareUrlFromAddress(address string) string {
+	return "https://looksrare.org/collections/" + address
 }

@@ -17,7 +17,10 @@ func PriceCheckMessage(collectionName string, link string, osr *opensea.OSRespon
 		"💎 Volume traded:        %sΞ\n"+
 		"💯 Supply:                       %s\n"+
 		"✋🏼 Owners:                      %s\n"+
+		"\n"+
 		"🌊 [Visit Opensea](%s)\n"+
+		"%s\n"+
+		"%s\n"+
 		"%s",
 		collectionName,
 		link,
@@ -28,6 +31,8 @@ func PriceCheckMessage(collectionName string, link string, osr *opensea.OSRespon
 		osr.GetSupplyString(),
 		osr.GetNumOwnersString(),
 		link,
+		renderDiscordField(osr),
+		renderLooksRareField(osr),
 		renderTwitterField(osr))
 }
 
@@ -35,6 +40,16 @@ func renderTwitterField(osr *opensea.OSResponse) string {
 	if osr.Collection.TwitterUsername == nil {
 		return ""
 	}
+	return "🐦 [Visit Twitter](" + opensea.CreateTwitterUrlFromUsername(osr.GetTwitterUsername()) + ")"
+}
 
-	return "🐦 [Visit Twitter](" + opensea.CreateTwitterUrlFromSlug(fmt.Sprintf("%v", osr.Collection.TwitterUsername)) + ")"
+func renderDiscordField(osr *opensea.OSResponse) string {
+	if osr.GetDiscordURL() == "" {
+		return ""
+	}
+	return "👾 [Visit Discord](" + opensea.CreateTwitterUrlFromUsername(osr.GetDiscordURL()) + ")"
+}
+
+func renderLooksRareField(osr *opensea.OSResponse) string {
+	return "❇️ [Visit LooksRare](" + opensea.CreateLooksrareUrlFromAddress(osr.GetDiscordURL()) + ")"
 }

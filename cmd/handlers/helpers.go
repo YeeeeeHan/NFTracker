@@ -34,7 +34,7 @@ func popularCollectionHelper(pgdb *pg.DB, osResponse *opensea.OSResponse, slugQu
 	// Update DB if collection is not already in database and is popular
 	retSlug, err := db.GetSlug(pgdb, slugQuery)
 	if err == pg.ErrNoRows && osResponse.Collection.Stats.NumOwners > PopularCollectionNumOwners {
-		log.Printf(fmt.Sprintf("[db.GetSlug] New popular slug... adding slug to DB... %s"), slugQuery)
+		log.Printf(fmt.Sprintf("[db.GetSlug] New popular slug... adding slug to DB... %s", slugQuery))
 		_, _ = db.CreateSlug(pgdb, &db.Slugs{
 			SlugName:   slugQuery,
 			FloorPrice: osResponse.Collection.Stats.FloorPrice,
