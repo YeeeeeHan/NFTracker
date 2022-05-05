@@ -151,7 +151,10 @@ func (osr OSResponse) GetDiscordURL() string {
 	return osr.Collection.DiscordURL
 }
 
-func (osr OSResponse) GetContractAddess() string {
+func (osr OSResponse) GetContractAddress() string {
+	if len(osr.Collection.PrimaryAssetContracts) == 0 {
+		return ""
+	}
 	return osr.Collection.PrimaryAssetContracts[0].Address
 }
 

@@ -51,5 +51,10 @@ func renderDiscordField(osr *opensea.OSResponse) string {
 }
 
 func renderLooksRareField(osr *opensea.OSResponse) string {
-	return "❇️ [Visit LooksRare](" + opensea.CreateLooksrareUrlFromAddress(osr.GetContractAddess()) + ")"
+	ca := osr.GetContractAddress()
+	if ca == "" {
+		return ""
+	}
+
+	return "❇️ [Visit LooksRare](" + opensea.CreateLooksrareUrlFromAddress(ca) + ")"
 }
