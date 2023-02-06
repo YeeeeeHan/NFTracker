@@ -6,16 +6,20 @@ NFTracker is a telegram bot that allows you to query and track Opensea collectio
 
 Deployed instance: [link](https://t.me/NFTracker_bot)
 
-Type `/start` to view basic commands for the telegram bot
+Type `/start` to view basic commands for the telegram bot.
+
 ![start](assets/start.png)
 
 Type `/fp` followed by the Opensea slug, to reveal crucial information of the collection.
+
 ![bayc](assets/bayc.png)
 
 If you have entered the wrong slug, the bot would search for the closest match of popular collections within the postgres database.
+
 ![notfound](assets/notfound.png)
 
 Click the inline button to reveal the statistics of the closest match.
+
 ![start](assets/found.png)
 
 ## Technical Specification
