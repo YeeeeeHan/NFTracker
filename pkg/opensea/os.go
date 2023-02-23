@@ -4,11 +4,12 @@ import (
 	"NFTracker/pkg/custError"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 type OSResponse struct {
@@ -94,7 +95,7 @@ type OSResponse struct {
 		Name                        string      `json:"name"`
 		OnlyProxiedTransfers        bool        `json:"only_proxied_transfers"`
 		OpenseaBuyerFeeBasisPoints  string      `json:"opensea_buyer_fee_basis_points"`
-		OpenseaSellerFeeBasisPoints string      `json:"opensea_seller_fee_basis_points"`
+		OpenseaSellerFeeBasisPoints int         `json:"opensea_seller_fee_basis_points"`
 		PayoutAddress               string      `json:"payout_address"`
 		RequireEmail                bool        `json:"require_email"`
 		ShortDescription            interface{} `json:"short_description"`
